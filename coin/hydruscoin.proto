@@ -1,0 +1,75 @@
+/*
+Copyright Hydrusio Labs Inc. 2016 All Rights Reserved.
+Written by mint.zhao.chiu@gmail.com. github.com: https://www.github.com/mintzhao
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+		 http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+syntax = "proto3";
+
+package coin;
+
+// account model digitalAssets
+message Account {
+    string addr = 1;
+    uint64 balance = 2;
+    map<string, TX.TXOUT> txouts = 3;
+}
+
+// utxo tx
+message TX {
+    uint64 version = 1;
+    int64 timestamp = 2;
+    // txin not specified who has this txin, because creator can use their txout only, txin must be creator's previous txout
+    message TXIN {
+        uint32 ix = 1;
+        string sourceHash = 2;
+    }
+    repeated TXIN txin = 3;
+
+    message TXOUT {
+        uint64 value = 1;
+        string addr = 2; // who will receive this txout
+        int64 until = 3; // until xx timestamp, any one cant spend the txout
+    }
+    repeated TXOUT txout = 4;
+
+    string founder = 5; // who created this tx
+    bool coinbase = 6;
+}
+
+// ExecResult is the result of processing a transaction
+message ExecResult {
+    uint64 sumCurrentOutputs = 1;
+    uint64 sumPriorOutputs = 2;
+    bool isCoinbase = 3;
+}
+
+// QueryAddrResult is the result of query function query_addr
+message QueryAddrResult {
+    Account account = 1;
+}
+
+// QueryAddrResults
+message QueryAddrResults {
+    repeated QueryAddrResult results = 1;
+}
+
+// HydruscoinInfo
+message HydruscoinInfo {
+    uint64 coinTotal = 1;
+    uint64 accountTotal = 2;
+    uint64 txoutTotal = 3;
+    uint64 txTotal = 4;
+    string placeholder = 5;
+}
