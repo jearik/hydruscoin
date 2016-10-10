@@ -33,7 +33,7 @@ func init() {
 type Hydruscoin struct{}
 
 // Init deploy chaincode into vp
-func (cc *Hydruscoin) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (coin *Hydruscoin) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	if function != "deploy" {
 		return nil, ErrInvalidFunction
 	}
