@@ -52,7 +52,15 @@ func (coin *Hydruscoin) coinbase(store Store, args []string) ([]byte, error) {
 		return nil, err
 	}
 
-	// Loop through outputs first
+	// Now loop over inputs
+	for _, input := range tx.Txin {
+		if math.MaxUint32 != input.Ix {
+			logger.Errorf("coinbase tx can not has other input")
+			return nil, ErrMustCoinbase
+		}
+	}
+
+	// Loop through outputs
 	for index, output := range tx.Txout {
 		if output.Addr == "" {
 			return nil, ErrInvalidTX
@@ -91,14 +99,6 @@ func (coin *Hydruscoin) coinbase(store Store, args []string) ([]byte, error) {
 		}
 		logger.Debugf("put tx output %s:%v", currKey.String(), output)
 		execResult.SumCurrentOutputs += output.Value
-	}
-
-	// Now loop over inputs
-	for _, input := range tx.Txin {
-		if math.MaxUint32 != input.Ix {
-			logger.Errorf("coinbase tx can not has other input")
-			return nil, ErrMustCoinbase
-		}
 	}
 
 	if err := store.PutTx(tx); err != nil {

@@ -71,5 +71,6 @@ message HydruscoinInfo {
     uint64 accountTotal = 2;
     uint64 txoutTotal = 3;
     uint64 txTotal = 4;
+    // when you init, you put other valiables into 0, so message bytes will be nil, can't be put into states
     string placeholder = 5;
 }

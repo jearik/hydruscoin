@@ -13,10 +13,13 @@
 * 数字货币简单统计
 
 ## 代码调试
-请参考[Hyperledger Chaincode开发调试教程](http://hydrus.io/hyperledger-chaincode-debug/)
+请参考[Hyperledger Chaincode开发调试教程](http://hydrus.io/2016/10/hyperledger-chaincode-debug/)
+
+## 代码解读
+请参考[简易UTXO与账户模型的数字资产智能合约Hydruscoin](http://hydrus.io/2016/10/demo-hydruscoin/)
 
 ## 代码贡献
-欢迎大家提pr
+欢迎大家提pr丰富hydruscoin的功能
 
 ## License
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at

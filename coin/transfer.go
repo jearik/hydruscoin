@@ -158,10 +158,5 @@ func (coin *Hydruscoin) transfer(store Store, args []string) ([]byte, error) {
 		return nil, err
 	}
 
-	// one of transfer main point is in == out, no coin mined, no coin lose
-	if execResult.SumCurrentOutputs != execResult.SumPriorOutputs {
-		return nil, ErrTxInOutNotBalance
-	}
-
 	return proto.Marshal(execResult)
 }

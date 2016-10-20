@@ -41,7 +41,7 @@ func (coin *Hydruscoin) Init(stub shim.ChaincodeStubInterface, function string, 
 	// construct a new store
 	store := MakeChaincodeStore(stub)
 
-	// deploy hydruscoin chaincode only need to set coin counter
+	// deploy hydruscoin chaincode only need to set coin stater
 	if err := store.InitCoinInfo(); err != nil {
 		return nil, err
 	}
