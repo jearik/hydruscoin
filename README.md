@@ -21,6 +21,11 @@
 ## 代码贡献
 欢迎大家提pr丰富hydruscoin的功能
 
+## Change Log
+### 2016/10/28
+* 删除查询API`query_addr`,统一使用`query_addrs`
+* 增加账号注册API,现阶段只接受唯一参数,即钱包地址
+
 ## License
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 ```

@@ -19,21 +19,19 @@ package coin
 import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	"github.com/op/go-logging"
+	"github.com/hyperledger/fabric/flogging"
 )
 
 var (
 	logger = logging.MustGetLogger("hydruscoin")
 )
 
-func init() {
-	logging.SetLevel(logging.DEBUG, "hydruscoin")
-}
-
 // Hydruscoin
 type Hydruscoin struct{}
 
 // Init deploy chaincode into vp
 func (coin *Hydruscoin) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	flogging.LoggingInit("hydruscoin")
 	if function != "deploy" {
 		return nil, ErrInvalidFunction
 	}
@@ -52,6 +50,7 @@ func (coin *Hydruscoin) Init(stub shim.ChaincodeStubInterface, function string, 
 
 // Invoke function
 const (
+	IF_REGISTER string = "invoke_register"
 	IF_COINBASE string = "invoke_coinbase"
 	IF_TRANSFER string = "invoke_transfer"
 )
@@ -62,6 +61,8 @@ func (coin *Hydruscoin) Invoke(stub shim.ChaincodeStubInterface, function string
 	store := MakeChaincodeStore(stub)
 
 	switch function {
+	case IF_REGISTER:
+		return coin.registerAccount(store, args)
 	case IF_COINBASE:
 		return coin.coinbase(store, args)
 	case IF_TRANSFER:
@@ -73,7 +74,6 @@ func (coin *Hydruscoin) Invoke(stub shim.ChaincodeStubInterface, function string
 
 // Query function
 const (
-	QF_ADDR  = "query_addr"
 	QF_ADDRS = "query_addrs"
 	QF_TX    = "query_tx"
 	QF_COIN  = "query_coin"
@@ -85,8 +85,6 @@ func (coin *Hydruscoin) Query(stub shim.ChaincodeStubInterface, function string,
 	store := MakeChaincodeStore(stub)
 
 	switch function {
-	case QF_ADDR:
-		return coin.queryAddr(store, args)
 	case QF_ADDRS:
 		return coin.queryAddrs(store, args)
 	case QF_TX:

@@ -20,41 +20,20 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func (coin *Hydruscoin) queryAddr(store Store, args []string) ([]byte, error) {
-	if len(args) != 1 || args[0] == "" {
-		return nil, ErrInvalidArgs
-	}
-
-	addr := args[0]
-	queryResult := new(QueryAddrResult)
-
-	account, err := store.GetAccount(addr)
-	if err != nil {
-		return nil, err
-	}
-	queryResult.Account = account
-
-	logger.Debugf("query addr[%s] result: %+v", addr, queryResult)
-	return proto.Marshal(queryResult)
-}
-
 func (coin *Hydruscoin) queryAddrs(store Store, args []string) ([]byte, error) {
 	results := &QueryAddrResults{
-		Results: make([]*QueryAddrResult, 0),
+		Accounts: make(map[string]*Account),
 	}
 
-	for _, arg := range args {
-		addr := arg
-		queryResult := new(QueryAddrResult)
-
+	for _, addr := range args {
 		account, err := store.GetAccount(addr)
 		if err != nil {
-			return nil, err
+			logger.Warningf("store.GetAccount() return error: %v", err)
+			continue
 		}
-		queryResult.Account = account
 
-		results.Results = append(results.Results, queryResult)
-		logger.Debugf("query addr[%s] result: %+v", addr, queryResult)
+		results.Accounts[addr] = account
+		logger.Debugf("query addr[%s] account: %+v", addr, account)
 	}
 
 	return proto.Marshal(results)

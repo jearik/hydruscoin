@@ -74,8 +74,12 @@ func (s *ChaincodeStore) PutCoinInfo(coinfo *HydruscoinInfo) error {
 }
 ```
 
+**注意**,通过REST API调用chaincode `Init`接口时, API是同步返回执行结果。
+
 ### Invoke接口
 `Invoke`接口是`Chaincode`设计的重中之重,是智能合约与外部进行数据交换的主要通道。通过给`Invoke`接口传递不同的`function`,配以不同的`args`,整个智能合约就活灵活现起来。
+
+**注意**,通过REST API调用chaincode `Invoke`接口时, API是同步返回调用结果,但是至于是否执行成功,需要通过`Query`接口查询。
 
 在我的例子里,`Invoke`主要有两个功能: *coinbase*(产生数字货币)和*transfer*(转移数字货币)。
 ```
@@ -100,6 +104,10 @@ func (coin *Hydruscoin) Invoke(stub shim.ChaincodeStubInterface, function string
 	}
 }
 ```
+
+**2016/10/28新增**
+新增了一个invoke方法,`register`用于注册钱包地址,目的是当用户钱包未有交易产生时也能够查询账户余额
+
 
 #### Invoke Coinbase
 `coinbase`一词源自比特币,意指凭空产生数字货币,即货币发行,央行印钞一个道理。代码看着有些复杂,我简单梳理一下逻辑关系。
@@ -131,14 +139,18 @@ func (coin *Hydruscoin) Invoke(stub shim.ChaincodeStubInterface, function string
 7. 全局验证交易`TX`的正确性
 8. 单独存储该交易至链上
 
+#### Invoke Register
+`register`方法很简单,接收一个钱包地址,初始化一个账户对象,存入区块链。
+
 ### Query接口
 `Query`是`Chaincode`的查询接口,通过该接口可以查询存储在区块链上的数据的最终状态。*注意:在`Query`中任何对数据的更改都是不被允许的*
 
-我现在实现了4个简单的查询功能:查询账户信息,查询账户集信息,查询交易信息,查询统计信息。
+**注意**,通过REST API调用chaincode `Query`接口时, API是同步返回执行结果。
+
+我现在实现了3个简单的查询功能:查询账户集信息,查询交易信息,查询统计信息。
 ```
 // Query function
 const (
-	QF_ADDR  = "query_addr"
 	QF_ADDRS = "query_addrs"
 	QF_TX    = "query_tx"
 	QF_COIN  = "query_coin"
@@ -150,8 +162,6 @@ func (coin *Hydruscoin) Query(stub shim.ChaincodeStubInterface, function string,
 	store := MakeChaincodeStore(stub)
 
 	switch function {
-	case QF_ADDR:
-		return coin.queryAddr(store, args)
 	case QF_ADDRS:
 		return coin.queryAddrs(store, args)
 	case QF_TX:
@@ -169,21 +179,18 @@ func (coin *Hydruscoin) Query(stub shim.ChaincodeStubInterface, function string,
 ```
 func (coin *Hydruscoin) queryAddrs(store Store, args []string) ([]byte, error) {
 	results := &QueryAddrResults{
-		Results: make([]*QueryAddrResult, 0),
+		Accounts: make(map[string]*Account),
 	}
 
-	for _, arg := range args {
-		addr := arg
-		queryResult := new(QueryAddrResult)
-
+	for _, addr := range args {
 		account, err := store.GetAccount(addr)
 		if err != nil {
-			return nil, err
+			logger.Warningf("store.GetAccount() return error: %v", err)
+			continue
 		}
-		queryResult.Account = account
 
-		results.Results = append(results.Results, queryResult)
-		logger.Debugf("query addr[%s] result: %+v", addr, queryResult)
+		results.Accounts[addr] = account
+		logger.Debugf("query addr[%s] account: %+v", addr, account)
 	}
 
 	return proto.Marshal(results)
@@ -233,3 +240,9 @@ func (coin *Hydruscoin) queryCoin(store Store, args []string) ([]byte, error) {
 
 ## 暂存问题
 1. 未对交易进行签名,在demo阶段,暂时还未实现
+
+
+## Change Log
+### 2016/10/28
+* 删除查询API`query_addr`,统一使用`query_addrs`
+* 增加账号注册API,现阶段只接受唯一参数,即钱包地址

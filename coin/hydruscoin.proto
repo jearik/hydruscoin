@@ -55,14 +55,9 @@ message ExecResult {
     bool isCoinbase = 3;
 }
 
-// QueryAddrResult is the result of query function query_addr
-message QueryAddrResult {
-    Account account = 1;
-}
-
-// QueryAddrResults
+// QueryAddrResults returns the result of query function query_addr
 message QueryAddrResults {
-    repeated QueryAddrResult results = 1;
+    map<string, Account> accounts = 1;
 }
 
 // HydruscoinInfo
