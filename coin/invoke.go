@@ -18,6 +18,12 @@ package coin
 
 func (coin *Hydruscoin) registerAccount(store Store, args []string) ([]byte, error) {
 	addr := args[0]
+
+	if tmpaccount, err := store.GetAccount(addr); err == nil && tmpaccount != nil && tmpaccount.Addr == addr {
+		logger.Warningf("Hydruscoin account(%s) already registered.", addr)
+		return nil, ErrAlreadyRegisterd
+	}
+
 	account := &Account{
 		Addr:    addr,
 		Balance: 0,

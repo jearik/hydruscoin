@@ -63,4 +63,7 @@ var (
 
 	// ErrTxOutLock
 	ErrTxOutLock = errors.New("tx out can be spend only after until time")
+
+	// ErrAlreadyRegisterd
+	ErrAlreadyRegisterd = errors.New("the addr has been registerd into coin")
 )
