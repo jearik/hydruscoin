@@ -17,6 +17,7 @@ limitations under the License.
 package coin
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -159,6 +160,9 @@ func (s *ChaincodeStore) PutCoinInfo(coinfo *HydruscoinInfo) error {
 
 // GetAccount returns account from world states
 func (s *ChaincodeStore) GetAccount(addr string) (*Account, error) {
+	if addr == "" {
+		return nil, errors.New("empty addr")
+	}
 	key := generateAccountKey(addr)
 	data, err := s.stub.GetState(key)
 	if err != nil {

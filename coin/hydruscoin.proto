@@ -34,6 +34,8 @@ message TX {
     message TXIN {
         uint32 ix = 1;
         string sourceHash = 2;
+        // indicate owner's addr
+        string addr = 3;
     }
     repeated TXIN txin = 3;
 
@@ -45,14 +47,12 @@ message TX {
     repeated TXOUT txout = 4;
 
     string founder = 5; // who created this tx
-    bool coinbase = 6;
 }
 
 // ExecResult is the result of processing a transaction
 message ExecResult {
     uint64 sumCurrentOutputs = 1;
     uint64 sumPriorOutputs = 2;
-    bool isCoinbase = 3;
 }
 
 // QueryAddrResults returns the result of query function query_addr

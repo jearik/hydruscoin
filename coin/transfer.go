@@ -18,7 +18,6 @@ package coin
 
 import (
 	"encoding/base64"
-	"math"
 	"time"
 
 	"github.com/golang/protobuf/proto"
@@ -55,21 +54,22 @@ func (coin *Hydruscoin) transfer(store Store, args []string) ([]byte, error) {
 		return nil, ErrTxNoFounder
 	}
 
-	founderAccount, err := store.GetAccount(tx.Founder)
-	if err != nil {
-		return nil, ErrTxNoFounder
-	}
+	//founderAccount, err := store.GetAccount(tx.Founder)
+	//if err != nil {
+	//	return nil, ErrTxNoFounder
+	//}
 
 	for _, ti := range tx.Txin {
 		prevTxHash := ti.SourceHash
 		prevOutputIx := ti.Ix
-		if prevOutputIx == math.MaxUint32 {
-			return nil, ErrCantCoinbase
-		}
-
+		ownerAddr := ti.Addr
 		keyToPrevOutput := &Key{TxHashAsHex: prevTxHash, TxIndex: prevOutputIx}
 
-		txout, ok := founderAccount.Txouts[keyToPrevOutput.String()]
+		ownerAccount, err := store.GetAccount(ownerAddr)
+		if err != nil {
+			return nil, err
+		}
+		txout, ok := ownerAccount.Txouts[keyToPrevOutput.String()]
 		if !ok {
 			return nil, ErrAccountNoTxOut
 		}
@@ -82,21 +82,24 @@ func (coin *Hydruscoin) transfer(store Store, args []string) ([]byte, error) {
 			}
 		}
 
-		if founderAccount.Balance < txout.Value {
+		if ownerAccount.Balance < txout.Value {
 			return nil, ErrAccountNotEnoughBalance
 		}
-		founderAccount.Balance -= txout.Value
+		ownerAccount.Balance -= txout.Value
+		delete(ownerAccount.Txouts, keyToPrevOutput.String())
+		// save owner account
+		if err := store.PutAccount(ownerAccount); err != nil {
+			return nil, err
+		}
 
-		delete(founderAccount.Txouts, keyToPrevOutput.String())
 		// coin stat
 		coinInfo.TxoutTotal -= 1
-
 		execResult.SumPriorOutputs += txout.Value
 	}
 	// save founder account
-	if err := store.PutAccount(founderAccount); err != nil {
-		return nil, err
-	}
+	//if err := store.PutAccount(founderAccount); err != nil {
+	//	return nil, err
+	//}
 
 	for idx, to := range tx.Txout {
 		account, err := store.GetAccount(to.Addr)
@@ -120,18 +123,13 @@ func (coin *Hydruscoin) transfer(store Store, args []string) ([]byte, error) {
 
 		account.Balance += to.Value
 		account.Txouts[outKey.String()] = to
-		// coin stat
-		coinInfo.TxoutTotal += 1
-
 		if err := store.PutAccount(account); err != nil {
 			return nil, err
 		}
 
+		// coin stat
+		coinInfo.TxoutTotal += 1
 		execResult.SumCurrentOutputs += to.Value
-	}
-
-	if execResult.IsCoinbase {
-		return nil, ErrCantCoinbase
 	}
 
 	// current outputs must less than prior outputs
@@ -150,10 +148,8 @@ func (coin *Hydruscoin) transfer(store Store, args []string) ([]byte, error) {
 	}
 	logger.Debug("put tx into world state")
 
-	// tx total counter
-	coinInfo.TxTotal += 1
-
 	// save coin stat
+	coinInfo.TxTotal += 1
 	if err := store.PutCoinInfo(coinInfo); err != nil {
 		return nil, err
 	}
